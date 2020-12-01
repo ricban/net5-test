@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-
+      
     - name: Publish app
       run: dotnet publish Covid19.sln -c Release
 
@@ -19,7 +19,7 @@ jobs:
       uses: SteveSandersonMS/ghaction-rewrite-base-href@v1
       with:
         html_path: ${{ env.PUBLISH_DIR }}/index.html
-        base_href: /blazor-wasm--covid19/
+        base_href: /net5-test/
 
     - name: GitHub Pages
       if: success()
