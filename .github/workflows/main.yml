@@ -1,5 +1,5 @@
 env:
-  PUBLISH_DIR: bin/Release/net5.0
+  PUBLISH_DIR: build
                
 # Controls when the action will run
 on:
