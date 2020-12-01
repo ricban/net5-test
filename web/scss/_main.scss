@@ -1,0 +1,29 @@
+﻿:root {
+    --yellow: #ffff00;
+}
+
+.content:nth-child(odd) {
+    background-color: #FCFBF0;
+}
+
+.content:nth-child(even) {
+    background-color: #F4F4E7;
+}
+
+.footer {
+    a {
+        text-decoration: none;
+    }
+
+    a:hover {
+        font-weight: bold;
+    }
+}
+
+.bg-yellow {
+    background-color: var(--yellow) !important;
+}
+
+.text-yellow {
+    color: var(--yellow) !important;
+}

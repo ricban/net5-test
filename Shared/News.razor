@@ -1,0 +1,40 @@
+﻿@if(Data.HasError)
+{
+    <DataAlert Data="News" Type="danger"></DataAlert>
+}
+else
+{
+    <Row Class="row-cols row-cols-1 row-cols-lg-2">
+        @foreach(var item in Data.Items)
+        {
+            <Column Class="mb-3">
+                <Card Class="news shadow h-100">
+                    <Row Class="h-100">
+                        <Column Size="3">
+                            <img src="@item.UrlToImage" class="card-img" alt="News Article">
+                        </Column>
+                        <Column Size="9" Class="d-flex flex-column justify-content-between align-items-end ">
+                            <div>
+                                <p class="card-title">
+                                    <Hyperlink Href="@item.Url" Class="stretched-link text-decoration-none">@item.Title</Hyperlink>
+                                    <ExternalLinkIcon Class="small ml-1"></ExternalLinkIcon>
+                                </p>
+                                <p class="small text-muted">
+                                    @((MarkupString)item.Description)
+                                </p>
+                            </div>
+                            <p class="mb-0">
+                                <small class="badge bg-cyan p-2">@item.PublishedAt.UpdatedAgo()</small>
+                            </p>
+                        </Column>
+                    </Row>
+                </Card>
+            </Column>
+        }
+    </Row>
+}
+
+@code {
+    [Parameter]
+    public CovidNews Data { get; set; } = default!;
+}

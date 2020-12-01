@@ -1,0 +1,36 @@
+﻿<div class="@("container-fluid content".Merge(Class))" style="@style">
+    @if (Fluid)
+    {
+         @ChildContent
+    }
+    else
+    {
+        <div class="container py-5">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public bool Fluid { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = default!;
+
+    [Parameter]
+    public string BackgroundColor { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    private string style = default!;
+
+    protected override void OnInitialized()
+    {
+        if (!BackgroundColor.IsNullOrWhiteSpace())
+        {
+            style = $"background-color: {BackgroundColor} !important";
+        }
+    }
+}

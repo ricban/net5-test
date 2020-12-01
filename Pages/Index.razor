@@ -1,0 +1,678 @@
+﻿@page "/"
+
+@inject CovidService CovidService
+@inject AppSettings AppSettings
+@inject IWebAssemblyHostEnvironment HostEnvironment
+@inject IJSRuntime JSRuntime
+@using System.Linq.Dynamic.Core;
+
+@if (viewState == ViewState.Loading)
+{
+    <Spinner Text="@($"Loading {countryName}...")"></Spinner>
+}
+else if(viewState == ViewState.Error)
+{
+    <Error Message="@errorMessage" OnContinueCallback="@Reload"></Error>
+}
+else
+{
+    <Content Fluid="true" Class="bg-dark">
+        <Row>
+            <Column Size="12" Class="col-lg-7 d-flex align-items-center py-3 px-5">
+                <img src="@AppSettings.App.Logo" class="img-fluid mr-3" alt="Logo" />
+                <h1 class="text-warning mb-0">@AppSettings.App.Name</h1>
+            </Column>
+            <Column Size="12" Class="col-lg-5 d-flex align-items-center py-3 px-5">
+                <RadzenDropDown AllowFiltering="true"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                TextProperty="Name"
+                                ValueProperty="Name"
+                                Data="@countries"
+                                @bind-Value="countryName"
+                                Change="@(async () => await LoadData())"
+                                class="w-100"/>
+                <img alt="Flag" src="@covid.Country.Flag" class="@($"flag {isGlobal.IIf("global","img-thumbnail")} ml-5")" />
+            </Column>
+        </Row>
+    </Content>
+
+    @* ***** Statistics ***** *@
+
+    <Content>
+        <ContentHeader Title="Statistics">
+            <Column>
+                <h5 class="d-flex justify-content-end">
+                    <span class="badge bg-cyan">
+                        <Icon Name="update" Class="align-middle mr-1"></Icon>
+                        @covid.LastUpdated.UpdatedAgo("Updated")
+                    </span>
+                </h5>
+            </Column>
+        </ContentHeader>
+        <Row Class="row-cols-2 row-cols-lg-4">
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <Trend Value="@covid.CasesDiff" Class="float-right align-top" UpColor="text-danger" DownColor="text-success"></Trend>
+                    <h6 class="card-title text-muted">Total Cases</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Cases" Color="@AppSettings.Color.Cases"></CountUp>
+                    </h3>
+                    <p class="card-text small d-flex flex-column justify-content-center text-center stats trend">
+                        @($"{covid.CasesPct.ToString("P1")} {(covid.CasesDiff > 0 ? "in" :"de")}crease from yesterday ({covid.CasesDiff.ToString("+#,##0;-#,##0")})")
+                    </p>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <Trend Value="@covid.DeathsDiff" Class="float-right align-top" UpColor="text-danger" DownColor="text-success"></Trend>
+                    <h6 class="card-title text-muted">Total Deaths</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Deaths" Color="@AppSettings.Color.Deaths"></CountUp>
+                    </h3>
+                    <p class="card-text small d-flex flex-column justify-content-center text-center stats trend">
+                        @($"{covid.DeathsPct.ToString("P1")} {(covid.DeathsDiff > 0 ? "in" :"de")}crease from yesterday ({covid.DeathsDiff.ToString("+#,##0;-#,##0")})")
+                    </p>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <Trend Value="@covid.RecoveredDiff" Class="float-right align-top" UpColor="text-success" DownColor="text-danger"></Trend>
+                    <h6 class="card-title text-muted">Total Recoveries</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Recovered" Color="@AppSettings.Color.Recovered"></CountUp>
+                    </h3>
+                    <p class="card-text small d-flex flex-column justify-content-center text-center stats trend">
+                        @($"{covid.RecoveredPct.ToString("P1")} {(covid.RecoveredDiff > 0 ? "in" :"de")}crease from yesterday ({covid.RecoveredDiff.ToString("+#,##0;-#,##0")})")
+                    </p>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <Trend Value="@covid.ActiveDiff" Class="float-right align-top" UpColor="text-danger" DownColor="text-success"></Trend>
+                    <h6 class="card-title text-muted">Active Cases</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Active" Color="@AppSettings.Color.Active"></CountUp>
+                    </h3>
+                    <p class="card-text small d-flex flex-column justify-content-center text-center trend">
+                        @($"{covid.ActivePct.ToString("P1")} {(covid.ActiveDiff > 0 ? "in" :"de")}crease from yesterday ({covid.ActiveDiff.ToString("+#,##0;-#,##0")})")
+                    </p>
+                </Card>
+            </Column>
+        </Row>
+        <Row Class="row-cols-2 row-cols-lg-4">
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Today Cases</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.CasesToday" Color="@AppSettings.Color.Cases"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Today Deaths</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.DeathsToday" Color="@AppSettings.Color.Deaths"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Today Recovered</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.RecoveredToday" Color="@AppSettings.Color.Recovered"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Today Active</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.ActiveToday" Color="@AppSettings.Color.Active"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+        </Row>
+        <Row Class="row-cols-2 row-cols-lg-4">
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Tested</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Tests"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Critical</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Critical"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Population</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@covid.Population"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+            <Column Class="mb-4">
+                <Card Class="stats shadow h-100">
+                    <h6 class="card-title text-muted">Affected @(isGlobal.IIf("Countries", "Provinces/States"))</h6>
+                    <h3 class="card-text font-weight-bold text-center countup">
+                        <CountUp Value="@(isGlobal ? covid.AffectedCountries : covid.Regions?.Count ?? 0)"></CountUp>
+                    </h3>
+                </Card>
+            </Column>
+        </Row>
+        <details class="text-center" @ontoggle="StatisticChartOnToggle">
+            <summary class="btn btn-purple mt-3 px-3">
+                <span class="ml-2">@(covid.View.StatisticShowChart ? "Hide" : "Show") Chart</span>
+            </summary>
+        </details>
+
+        @if (covid.View.StatisticShowChart)
+        {
+            <Row Class="bg-white shadow mt-4 p-3">
+                <Column Class="col col-lg-8">
+                    <Chart Name="statistics" Configuration="@covid.Chart.Statistics"></Chart>
+                </Column>
+                <Column Class="col mt-4 col-lg-4 mt-lg-0">
+                    <Row>
+                        <Column Class="col-6 col-lg-12">
+                            <Chart Name="recoveryrate" Configuration="@covid.Chart.RecoveryRate"></Chart>
+                        </Column>
+                        <Column  Class="col-6 col-lg-12 pt-lg-3">
+                            <Chart Name="fatalityrate" Configuration="@covid.Chart.FatalityRate"></Chart>
+                        </Column>
+                    </Row>
+                </Column>
+            </Row>
+            }
+    </Content>
+
+    @* ***** Infection Map ***** *@
+
+    @if(!covid.InfectionRiskMap.IsNullOrWhiteSpace())
+    {
+        <Content>
+            <ContentHeader Title="Infection Map"></ContentHeader>
+            <Row>
+                <Column>
+                    <RisklineMap Type="RisklineMapType.Infection"
+                                 Title="World Infection Risk Map"
+                                 Url="@covid.InfectionRiskMap"
+                                 AspectRatio="@covid.MapAspectRatio">
+                    </RisklineMap>
+                </Column>
+            </Row>
+        </Content>
+    }
+
+    @* ***** Timeline ***** *@
+
+    <Content>
+        <ContentHeader Title="@($"{AppSettings.Timeline.Limit} Days Timeline")">
+            <Column Size="4" Class="d-flex justify-content-end">
+                <ButtonGroup Name="timelineView" Class="bg-white" Type="btn-outline-purple" Labels="@($"{viewAsTable};{viewAsChart}")" Active="@(covid.View.TimelineViewAsChart ? viewAsChart : viewAsTable)" OnChangeCallback="@TimelineViewOnChange"></ButtonGroup>
+            </Column>
+        </ContentHeader>
+        <Row>
+            <Column>
+                <div class="@timelineTableClass shadow">
+                    <RadzenGrid Data="@covid.Timelines" TItem="CovidTimeline" AllowPaging="true" PageSize="15" AllowFiltering="false" AllowSorting="true">
+                        <Columns>
+                            <RadzenGridColumn TItem="CovidTimeline" Property="Date" Title="Date" Filterable="false" FormatString="{0:MM/dd/yyyy}" />
+                            <RadzenGridColumn TItem="CovidTimeline" Property="Cases" Title="Cases" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                            <RadzenGridColumn TItem="CovidTimeline" Property="Deaths" Title="Deaths" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                            <RadzenGridColumn TItem="CovidTimeline" Property="Recovered" Title="Recovered" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                            <RadzenGridColumn TItem="CovidTimeline" Property="Cases" Title="Active" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                        </Columns>
+                    </RadzenGrid>
+                </div>
+                @if (covid.View.TimelineViewAsChart)
+                {
+                    <div class="@timelineChartClass bg-white shadow p-3">
+                        <Chart Configuration="@covid.Chart.Timeline"></Chart>
+                    </div>
+                }
+            </Column>
+        </Row>
+    </Content>
+
+    @* ***** Breakdown ***** *@
+
+    @if (isGlobal)
+    {
+        <Content>
+            <ContentHeader Title="Breakdown">
+                <Column Class="d-flex justify-content-end">
+                    <ButtonGroup Name="breakdownBy" Class="bg-white mr-5" Type="btn-outline-primary" Labels="@($"{byContinent};{byCountry}")" Active="@(covid.View.BreakdownByContinent ? byContinent : byCountry)" OnChangeCallback="@BreakdownByOnChange"></ButtonGroup>
+                    @if(covid.View.BreakdownByContinent)
+                    {
+                        <ButtonGroup Name="breakdownByContinentView" Class="bg-white" Type="btn-outline-purple" Labels="@($"{viewAsTable};{viewAsChart}")" Active="@(covid.View.BreakdownByContinentViewAsChart ? viewAsChart : viewAsTable)" OnChangeCallback="@BreakdownByContinentViewOnChange"></ButtonGroup>
+                    }
+                    else
+                    {
+                        <ButtonGroup Name="breakdownByRegionView" Class="bg-white" Type="btn-outline-purple" Labels="@($"{viewAsTable};{viewAsChart}")" Active="@(covid.View.BreakdownByRegionViewAsChart ? viewAsChart : viewAsTable)" OnChangeCallback="@BreakdownByRegionViewOnChange"></ButtonGroup>
+                    }
+                </Column>
+            </ContentHeader>
+            @* ***** Continents ***** *@
+            <div class="@(covid.View.BreakdownByContinent ? "" : "d-none")">
+                <Row>
+                    <Column>
+                        <div class="@continentTableClass shadow">
+                            <RadzenGrid Data="@covid.Continents" TItem="CovidRegion" AllowSorting="true" AllowPaging="true" PageSize="20" class="@(covid.View.BreakdownByContinentViewAsChart ? "d-none" : "")">
+                                <Columns>
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Name" Title="Continent" Width="300px" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Cases" Title="Cases" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Deaths" Title="Deaths" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Recovered" Title="Recovered" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Active" Title="Active" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Tests" Title="Tests" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                </Columns>
+                            </RadzenGrid>
+                        </div>
+                        @if (covid.View.BreakdownByContinentViewAsChart)
+                        {
+                            <div class="@continentChartClass bg-white shadow p-3">
+                                <Chart Configuration="@covid.Chart.ContinentBreakdown"></Chart>
+                            </div>
+                        }
+                    </Column>
+                </Row>
+            </div>
+            @* ***** Countries ***** *@
+            <div class="@(covid.View.BreakdownByContinent ? "d-none" : "")">
+                <Row>
+                    <Column>
+                        <div class="@regionTableClass shadow">
+                            <RadzenGrid Data="@regions" Count="@regionsCount" LoadData="@LoadRegions" Render="@RenderRegions" TItem="CovidRegion" class="@(covid.View.BreakdownByRegionViewAsChart? "d-none" : "")"
+                                        AllowSorting="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="20">
+                                <Columns>
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Name" Title="Country /Region / Sovereignty" Width="300px" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Cases" Title="Cases" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Deaths" Title="Deaths" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Recovered" Title="Recovered" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Active" Title="Active" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                    <RadzenGridColumn TItem="CovidRegion" Property="Tests" Title="Tests" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                </Columns>
+                            </RadzenGrid>
+                        </div>
+                        @if (covid.View.BreakdownByRegionViewAsChart)
+                        {
+                            <div class="@regionChartClass bg-white shadow p-3">
+                                <Chart Configuration="@regionsChart"></Chart>
+                            </div>
+                        }
+                    </Column>
+                </Row>
+            </div>
+        </Content>
+    }
+    else if (covid.Regions?.Count > 0)
+    {
+        <Content>
+            <ContentHeader Title="Breakdown">
+                <Column Class="d-flex justify-content-end">
+                    <ButtonGroup Name="breakdownByRegionView" Class="bg-white" Type="btn-outline-purple" Labels="@($"{viewAsTable};{viewAsChart}")" Active="@(covid.View.BreakdownByRegionViewAsChart ? viewAsChart : viewAsTable)" OnChangeCallback="@BreakdownByRegionViewOnChange"></ButtonGroup>
+                </Column>
+            </ContentHeader>
+            <Row>
+                <Column>
+                    <div class="@regionTableClass shadow">
+                        <RadzenGrid Data="@regions" Count="@regionsCount" LoadData="@LoadRegions" Render="@RenderRegions" TItem="CovidRegion" AllowSorting="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="20">
+                            <Columns>
+                                <RadzenGridColumn TItem="CovidRegion" Property="Name" Title="Provinces / States" Width="300px" />
+                                <RadzenGridColumn TItem="CovidRegion" Property="Cases" Title="Cases" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                <RadzenGridColumn TItem="CovidRegion" Property="Deaths" Title="Deaths" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                <RadzenGridColumn TItem="CovidRegion" Property="Recovered" Title="Recovered" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                                <RadzenGridColumn TItem="CovidRegion" Property="Active" Title="Active" Filterable="false" FormatString="{0:#,##0}" TextAlign="TextAlign.Right" />
+                            </Columns>
+                        </RadzenGrid>
+                    </div>
+                    @if (covid.View.BreakdownByRegionViewAsChart)
+                    {
+                        <div class="@regionChartClass bg-white shadow p-3">
+                            <Chart Configuration="@regionsChart"></Chart>
+                        </div>
+                    }
+                </Column>
+            </Row>
+        </Content>
+    }
+
+    @* ***** Travel Advisory ***** *@
+
+    <Content>
+        <ContentHeader Title="Travel Advisory"></ContentHeader>
+        <Row>
+            <Column>
+                @if(!covid.TravelRiskMap.IsNullOrWhiteSpace())
+                {
+                    <RisklineMap Type="@(isGlobal.IIf(RisklineMapType.WorldTravel, RisklineMapType.DomesticTravel))"
+                                 Title="@($"{isGlobal.IIf("World", "Domestic")} Travel Risk Map")"
+                                 Url="@covid.TravelRiskMap"
+                                 AspectRatio="@covid.MapAspectRatio">
+
+                    </RisklineMap>
+                }
+                else if(!isGlobal && covid.TravelAdvisory != null)
+                {
+                    <TravelAdvisory Data="@covid.TravelAdvisory"></TravelAdvisory>
+                }
+            </Column>
+        </Row>
+    </Content>
+
+    @* ***** News ***** *@
+
+    @if (!isGlobal)
+    {
+        <Content>
+            <ContentHeader Title="News"></ContentHeader>
+            <Row>
+                <Column>
+                    <News Data="@covid.News"></News>
+                </Column>
+            </Row>
+        </Content>
+    }
+
+    @* ***** Therapeutics & Vaccines Tracker ***** *@
+
+    <Content>
+        <ContentHeader Title="Therapeutics & Vaccines Tracker"></ContentHeader>
+        <Row Class="row-cols-2">
+            <Column>
+                <Card Class="tracker rounded shadow h-100" BodyClass="d-flex justify-content-between align-items-center" ImageSource="@AppSettings.Image.TherapeuticsTracker" ImageAlt="Therapeutics Tracker">
+                    <Hyperlink Href="@covid.Therapeutics.Source" Class="btn btn-purple text-white">
+                        View Candidates <span class="badge bg-warning text-dark ml-2">@covid.Therapeutics.Candidates</span>
+                    </Hyperlink>
+                    <ExternalLinkIcon></ExternalLinkIcon>
+                </Card>
+            </Column>
+            <Column>
+                <Card Class="tracker rounded shadow h-100" BodyClass="d-flex justify-content-between align-items-center" ImageSource="@AppSettings.Image.VaccineTracker" ImageAlt="Vaccine Tracker">
+                    <Hyperlink Href="@covid.Vaccines.Source" Class="btn btn-purple text-white">
+                        View Candidates <span class="badge bg-warning text-dark ml-2">@covid.Vaccines.Candidates</span>
+                    </Hyperlink>
+                    <ExternalLinkIcon></ExternalLinkIcon>
+                </Card>
+            </Column>
+        </Row>
+    </Content>
+
+    @* ***** Footer ***** *@
+
+    <Content Class="footer bg-dark">
+        <Row>
+            <Column>
+                <h5 Class="d-flex justify-content-center align-items-center">
+                    <Hyperlink Href="@AppSettings.Link.WhatYouShouldKnow" Class="text-yellow">Coronavirus and COVID-19: What You Should Know</Hyperlink>
+                    <ExternalLinkIcon Class="small ml-2"></ExternalLinkIcon>
+                </h5>
+            </Column>
+        </Row>
+        <Row Class="text-yellow text-center my-5">
+            <Column Class="h-100">
+                <h5 class="mb-3">API</h5>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.DiseaseSh" Class="text-white">Disease.sh</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.CoronaTracker" Class="text-white">Coronatracker.com</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.TravelAdvisoryInfo" Class="text-white">Travel-Advisory.info</Hyperlink></p>
+                <h5 class="mt-4 mb-3">Maps</h5>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.Riskline" Class="text-white mb-2">Riskline Travel Risk Intelligence</Hyperlink></p>
+            </Column>
+            <Column Class="h-100">
+                <h5 class="mb-3">Data Source</h5>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.JohnHopkins" Class="text-white mb-2">Johns Hopkins University</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.Worldometers" Class="text-white">Worldometers</Hyperlink></p>
+            </Column>
+            <Column>
+                <h5 class="mb-3">Built with</h5>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.Blazor" Class="text-white">Blazor WebAssembly</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.Radzen" Class="text-white">Radzen Blazor Components</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.Bootstrap" Class="text-white">Bootstrap</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.ChartJs" Class="text-white">Chart.js</Hyperlink></p>
+                <p class="mb-2"><Hyperlink Href="@AppSettings.Link.CountUpJs" Class="text-white">CountUp.js</Hyperlink></p>
+            </Column>
+        </Row>
+        <Row>
+            <Column Class="d-flex flex-column align-items-center text-warning">
+                <h6>
+                    <span class="mr-2">© 2020</span>@AppSettings.App.Name
+                </h6>
+                <Hyperlink Href="@AppSettings.Link.CodeRepository" Class="mt-2">
+                    <img src="@AppSettings.Image.GitHub" alt="Code Repository Link Image" />
+                </Hyperlink>
+            </Column>
+        </Row>
+    </Content>
+}
+
+@code {
+    private const string byContinent = "By Continent";
+    private const string byCountry = "By Country";
+    private const string viewAsChart = "View as Chart";
+    private const string viewAsTable = "View as Table";
+    private const string animationIn = "animate__animated animate__fadeIn";
+    private const string animationOut = "d-none";
+
+    private ViewState viewState;
+    private string errorMessage = default!;
+    private string countryName = default!;
+    private string previousCountry = default!;
+
+    private bool isGlobal;
+    private Covid covid = default!;
+    private List<CovidCountry> countries = default!;
+
+    private int regionsCount;
+    private string regionsChart = default!;
+    private List<CovidRegion> regions = default!;
+
+    private string timelineChartClass = default!;
+    private string timelineTableClass = default!;
+    private string continentChartClass = default!;
+    private string continentTableClass = default!;
+    private string regionChartClass = default!;
+    private string regionTableClass = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await SetInitialCountry().ConfigureAwait(false);
+
+            var loadDataTask = LoadData(null!);
+            var countriesTask = CovidService.GetCountriesAsync();
+
+            await Task.WhenAll(loadDataTask, countriesTask).ConfigureAwait(false);
+
+            countries = await countriesTask.ConfigureAwait(false);
+        }
+        catch(Exception ex)
+        {
+            SetError(ex);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("JsInterop.scrollTop").ConfigureAwait(false);
+        }
+
+        await base.OnAfterRenderAsync(firstRender).ConfigureAwait(false);
+    }
+
+    private async Task SetInitialCountry()
+    {
+        if (countryName.IsNullOrWhiteSpace())
+        {
+            countryName = await CovidService.GetLastViewedCountryAsync().ConfigureAwait(false);
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+    }
+
+    private async Task LoadData(string covidData = default!)
+    {
+        try
+        {
+            viewState = ViewState.Loading;
+
+            if (covidData.IsNullOrEmpty())
+            {
+                if (covid != null)
+                {
+                    previousCountry = covid.Serialize();
+                }
+
+                covid = await CovidService.GetDataAsync(countryName).ConfigureAwait(false);
+            }
+            else
+            {
+                covid = covidData.Deserialize<Covid>()!;
+                countryName = covid.Country.Name;
+            }
+
+            isGlobal = CovidService.IsGlobal(countryName);
+
+            timelineChartClass = "";
+            timelineTableClass = animationOut;
+            continentChartClass = animationOut;
+            continentTableClass = "";
+            regionChartClass = animationOut;
+            regionTableClass = "";
+
+            viewState = ViewState.Loaded;
+        }
+        catch(Exception ex)
+        {
+            SetError(ex);
+        }
+    }
+
+    private void SetError(Exception ex)
+    {
+        if (HostEnvironment.IsProduction())
+        {
+            errorMessage = $"Sorry, an error has occurred while trying to process your request.";
+        }
+        else
+        {
+            errorMessage = ex.ToHtml();
+        }
+
+        viewState = ViewState.Error;
+    }
+
+    private async Task Reload()
+    {
+        await LoadData(previousCountry).ConfigureAwait(false);
+    }
+
+    private void StatisticChartOnToggle()
+    {
+        covid.View.StatisticShowChart = !covid.View.StatisticShowChart;
+    }
+
+    private void TimelineViewOnChange()
+    {
+         covid.View.TimelineViewAsChart = !covid.View.TimelineViewAsChart;
+
+         if (covid.View.TimelineViewAsChart)
+         {
+             timelineChartClass = animationIn;
+             timelineTableClass = animationOut;
+         }
+         else
+         {
+             timelineChartClass = animationOut;
+             timelineTableClass = animationIn;
+         }
+    }
+
+    private void BreakdownByOnChange()
+    {
+        covid.View.BreakdownByContinent = !covid.View.BreakdownByContinent;
+    }
+
+    private void BreakdownByContinentViewOnChange()
+    {
+        covid.View.BreakdownByContinentViewAsChart = !covid.View.BreakdownByContinentViewAsChart;
+
+        if (covid.View.BreakdownByContinentViewAsChart)
+        {
+            continentChartClass = animationIn;
+            continentTableClass = animationOut;
+        }
+        else
+        {
+            continentChartClass = animationOut;
+            continentTableClass = animationIn;
+        }
+    }
+
+    private void BreakdownByRegionViewOnChange()
+    {
+        covid.View.BreakdownByRegionViewAsChart = !covid.View.BreakdownByRegionViewAsChart;
+
+        if (covid.View.BreakdownByRegionViewAsChart)
+        {
+            regionChartClass = animationIn;
+            regionTableClass = animationOut;
+        }
+        else
+        {
+            regionChartClass = animationOut;
+            regionTableClass = animationIn;
+        }
+    }
+
+    private async Task LoadRegions(LoadDataArgs args)
+    {
+        var query = covid.Regions.AsQueryable();
+        var count = covid.Regions.Count;
+        var withFilter = !args.Filter.IsNullOrEmpty();
+
+        if (withFilter)
+        {
+            query = query.Where(args.Filter);
+            count = query.Count();
+        }
+
+        if (!args.OrderBy.IsNullOrEmpty())
+        {
+            query = query.OrderBy(args.OrderBy);
+        }
+
+        if (args.Skip.HasValue)
+        {
+            query = query.Skip(args.Skip.Value);
+        }
+
+        if (args.Top.HasValue)
+        {
+            query = query.Take(args.Top.Value);
+        }
+
+        regions = query.ToList();
+        regionsCount = count;
+        regionsChart = CovidService.GetRegionsChartConfiguration(regions);
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+
+    private void RenderRegions(GridRenderEventArgs<CovidRegion> args)
+    {
+        if (args.FirstRender)
+        {
+            args.Grid.Reload();
+        }
+    }
+}

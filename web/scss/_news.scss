@@ -1,0 +1,14 @@
+﻿.news {
+    background-color: #fcfcfc;
+
+    &:hover {
+        background-color: #fff;
+        transform: translateY(-5px) scale(1.005) translateZ(0);
+    }
+
+    .card-img {
+        height: 100%;
+        object-fit: cover;
+        object-position: bottom;
+    }
+}

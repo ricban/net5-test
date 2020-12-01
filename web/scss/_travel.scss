@@ -1,0 +1,42 @@
+﻿$cards:
+    "extreme" #f2dede #ebcccc #a94442,
+    "high" #fcf8e3 #faf2cc #8a6d3b,
+    "medium" #d9edf7 #c4e3f3 #31708f,
+    "low" #dff0d8  #d0e9c6 #3c763d;
+
+@each $level, $start, $end, $color in $cards {
+
+    .travel-advisory.#{$level}-risk {
+        background-color: $end;
+        background-image: linear-gradient(to bottom, $start 0, $end 100%);
+        color: $color;
+
+        & .card-title {
+            border-top: $color 1px solid;
+            border-bottom: $color 1px solid;
+        }
+    }
+
+}
+
+.travel-advisory.legend {
+
+    .card-body {
+        background-color: #fff;
+    }
+
+    .card-text {
+        color: #212529;
+    }
+
+}
+
+@each $level, $start, $end, $color in $cards {
+
+    .travel-advisory.legend.#{$level}-risk .card-title {
+        border: none;
+        background-color: $end;
+        background-image: linear-gradient(to bottom, $start 0, $end 100%);
+        color: $color;
+    }
+}

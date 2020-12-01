@@ -1,0 +1,39 @@
+﻿<div class="@($"card".Merge(Class))">
+    @if(Default)
+    {
+        @if(!ImageSource.IsNullOrWhiteSpace())
+        {
+            <img src="@ImageSource" class="@("card-img-top".Merge(ImageClass))" alt="@ImageAlt" />
+        }
+        <div class="@($"card-body".Merge(BodyClass))">
+            @ChildContent
+        </div>
+    }
+    else
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = default!;
+
+    [Parameter]
+    public string ImageSource { get; set; } = default!;
+
+    [Parameter]
+    public string ImageClass { get; set; } = default!;
+
+    [Parameter]
+    public string ImageAlt { get; set; } = default!;
+
+    [Parameter]
+    public string BodyClass { get; set; } = default!;
+
+    [Parameter]
+    public bool Default { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+}

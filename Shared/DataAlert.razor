@@ -1,0 +1,13 @@
+﻿<div class="alert alert-@Type text-center shadow py-5" role="alert">
+    <h5><span class="font-weight-bold">@Data</span> is not available at this time.</h5>
+    <p class="mt-3 mb-1">Looks like the API server (data provider) is experiencing technical difficulties. </p>
+    <p class="mb-0">Please try again later.</p>
+</div>
+
+@code {
+    [Parameter]
+    public string Data { get; set; } = default!;
+
+    [Parameter]
+    public string Type { get; set; } = "info";
+}

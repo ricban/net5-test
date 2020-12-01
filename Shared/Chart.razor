@@ -1,0 +1,29 @@
+﻿@inject IJSRuntime JSRuntime
+
+@if (!Configuration.IsNullOrWhiteSpace())
+{
+    <canvas id="@id"></canvas>
+}
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = default!;
+
+    [Parameter]
+    public string Configuration { get; set; } = default!;
+
+    private string id = default!;
+
+    protected override void OnInitialized()
+    {
+        id = $"chartjs{(Name.IsNullOrWhiteSpace().IIf("",$"-{Name}"))}-{(Guid.NewGuid().ToString("N"))}";
+
+        base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("JsInterop.createChart", id, Configuration).ConfigureAwait(false);
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

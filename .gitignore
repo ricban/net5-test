@@ -348,3 +348,13 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/web/ts/js/scrollTop.js.map
+/web/ts/js/scrollTop.js
+/web/ts/js/localstore.js.map
+/web/ts/js/localstore.js
+/web/ts/js/countupjs-lib.js.map
+/web/ts/js/countupjs-lib.js
+/web/ts/js/chartjs-lib.js.map
+/web/ts/js/chartjs-lib.js
+/web/ts/js/app.js.map
+/web/ts/js/app.js

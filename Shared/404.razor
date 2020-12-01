@@ -1,0 +1,17 @@
+﻿<div class="vw-100 vh-100 d-flex justify-content-center align-items-center">
+    <div class="alert alert-warning text-center shadow p-5">
+        <h1>
+            <Icon Name="broken_image"></Icon>
+        </h1>
+        <div class="mt-2 mb-5 mx-5">
+            <h1>404 - PAGE NOT FOUND</h1>
+            <h5>Sorry, there's nothing at this address.</h5>
+        </div>
+        <Hyperlink Href="@Path" Target="_self" Class="btn btn-warning">BACK TO HOMEPAGE</Hyperlink>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Path { get; set; } = "/";
+}

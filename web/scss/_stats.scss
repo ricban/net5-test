@@ -1,0 +1,15 @@
+﻿.stats {
+    &:hover {
+        transform: translateY(-5px) scale(1.005) translateZ(0);
+    }
+
+    .card-text {
+        &.countup {
+            color: #795548;
+        }
+
+        &.trend {
+            min-height: 2.375rem;
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "include": [
+    "web/ts/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "wwwroot"
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "ES6",
+    "target": "ES6",
+    "moduleResolution": "Node",
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "baseUrl": "./",
+    "outDir": "web/ts/js",
+    "declaration": true,
+    "declarationDir": "web/ts/types",
+    "resolveJsonModule": true
+  }
+}

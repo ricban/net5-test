@@ -1,0 +1,10 @@
+﻿.flag {
+    width: 125px;
+    height: auto;
+    max-height: 72px;
+
+    &.global {
+        width: auto;
+        height: 64px;
+    }
+}

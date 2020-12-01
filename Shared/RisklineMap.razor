@@ -1,0 +1,35 @@
+﻿<div class="bg-white shadow">
+    <div class="@("map ratio".Merge(Class))" style="@($"--aspect-ratio: {AspectRatio}%;")">
+        <iframe title="@Title" src="@Url"></iframe>
+    </div>
+    @if(Type == RisklineMapType.WorldTravel)
+    {
+        <RisklineLegendWorldTravel></RisklineLegendWorldTravel>
+
+    }
+    else if(Type == RisklineMapType.DomesticTravel)
+    {
+        <RisklineLegendDomesticTravel></RisklineLegendDomesticTravel>
+    }
+    else
+    {
+        <RisklineLegendInfection></RisklineLegendInfection>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Url { get; set; } = default!;
+
+    [Parameter]
+    public int AspectRatio { get; set; } = 50;
+
+    [Parameter]
+    public string Class { get; set; } = "mt-3";
+
+    [Parameter]
+    public string Title { get; set; } = "Map";
+
+    [Parameter]
+    public RisklineMapType Type { get; set; } = RisklineMapType.Infection;
+}

@@ -1,0 +1,21 @@
+@inject NavigationManager NavigationManager
+
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <_404 Path="@path"></_404>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    private string path = "/";
+
+    protected override void OnInitialized()
+    {
+        path = NavigationManager.BaseUri;
+    }
+}

@@ -1,0 +1,44 @@
+﻿<span class="@classNames" title="@Title">
+    <RadzenIcon Icon="@icon" />
+</span>
+
+@code {
+    [Parameter]
+    public double Value { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string UpColor { get; set; } = default!;
+
+    [Parameter]
+    public string DownColor { get; set; } = default!;
+
+    private string icon = default!;
+    private string classNames = default!;
+
+    protected override void OnInitialized()
+    {
+        var color = DownColor;
+
+        if (Value > 0)
+        {
+            icon = "trending_up";
+            color = UpColor;
+        }
+        else if (Value < 0)
+        {
+            icon = "trending_down";
+        }
+        else
+        {
+            icon = "trending_flat";
+        }
+
+        classNames = color.Merge(Class);
+    }
+}

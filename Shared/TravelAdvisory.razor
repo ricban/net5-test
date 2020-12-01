@@ -1,0 +1,83 @@
+﻿@if(Data.HasError)
+{
+    <Row>
+        <Column>
+            <DataAlert Data="Travel Advisory" Type="danger"></DataAlert>
+        </Column>
+    </Row>
+}
+else
+{
+    <Row>
+        <Column>
+            <Card Class="@($"travel-advisory {status} rounded shadow text-center")" BodyClass="mx-3 my-2">
+                <h4 class="card-title mt-2 mb-4 py-2">@advice</h4>
+                <p class="card-text mt-4 mb-1">Risk Rating: <strong>@Data.Score.ToString("0.0")</strong> / 5.0</p>
+                <p class="card-tex mb-3">gathered from <strong>@Data.Source</strong> sources.</p>
+                <p class="card-text small mb-1">Date of analysis: @Data.Updated.ToString("MMMM d, yyyy h:m tt")</p>
+                <p class="card-text small">
+                    view the detailed analysis provided by <a href="@Data.DetailsUrl" target="_blank" rel="noreferrer nofollow"class="text-decoration-none" title="Link to detailed travel advisory of @Data.Country">Travel-Advisory.info</a>
+                    <Icon Name="launch" class="small text-danger ml-1"></Icon>
+                </p>
+            </Card>
+        </Column>
+    </Row>
+    <Row Class="row-cols-2 row-cols-lg-4 mt-5">
+        <Column Class="mb-4 mb-lg-0">
+            <Card Class="travel-advisory legend extreme-risk small rounded shadow h-100" BodyClass="small p-0">
+                <p class="card-title font-weight-bold p-3 mb-0">Extreme Warning (index value: 4.5 - 5)</p>
+                <p class="card-text p-3">You should avoid any trips. A high warning index is a sound indicator of potential harm to your health and well-being.</p>
+            </Card>
+        </Column>
+        <Column Class="mb-4 mb-lg-0">
+            <Card Class="travel-advisory legend high-risk small rounded shadow h-100" BodyClass="small p-0">
+                <p class="card-title font-weight-bold p-3 mb-0">High Risk (index value: 3.5 - 4.5)</p>
+                <p class="card-text p-3">Travel should be reduced to a necessary minimum and be conducted with good preparation and high attention.</p>
+            </Card>
+        </Column>
+        <Column>
+            <Card Class="travel-advisory legend medium-risk small rounded shadow h-100" BodyClass="small p-0">
+                <p class="card-title font-weight-bold p-3 mb-0">Medium Risk (index value: 2.5 - 3.5)</p>
+                <p class="card-text p-3">Warnings often relate to specific regions within a country. However, high attention is still advised when moving around.</p>
+            </Card>
+        </Column>
+        <Column>
+            <Card Class="travel-advisory legend low-risk small rounded shadow h-100" BodyClass="small p-0">
+                <p class="card-title font-weight-bold p-3 mb-0">Low Risk (index value: 0 - 2.5)</p>
+                <p class="card-text p-3">Usually this is an indicator that travelling in this country is relatively safe. Higher attention is advised with values > 1.</p>
+            </Card>
+        </Column>
+    </Row>
+}
+
+@code {
+    [Parameter]
+    public CovidTravelAdvisory Data { get; set; } = default!;
+
+    private string advice = default!;
+    private string status = default!;
+
+    protected override void OnInitialized()
+    {
+        if (Data.Score > 4.5)
+        {
+            status = "extreme-risk";
+            advice = "Do not travel";
+        }
+        else if (Data.Score > 3)
+        {
+            status = "high-risk";
+            advice = "Reconsider travelling";
+        }
+        else if (Data.Score > 2)
+        {
+            status = "medium-risk";
+            advice = "Travel with caution";
+        }
+        else
+        {
+            status = "low-risk";
+            advice = "Travel is usually safe";
+        }
+    }
+}

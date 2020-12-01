@@ -1,0 +1,19 @@
+﻿$riskline-extreme-risk-color: #bd2f35;
+$riskline-high-risk-color: #e1874d;
+$riskline-medium-risk-color: #fbc93a;
+$riskline-moderate-risk-color: #3eaf70;
+$riskline-low-risk-color: #2f835a;
+
+$riskline-legends: ( 
+    "extreme": $riskline-extreme-risk-color,
+    "high": $riskline-high-risk-color,
+    "medium": $riskline-medium-risk-color,
+    "moderate": $riskline-moderate-risk-color,
+    "low": $riskline-low-risk-color
+);
+
+@each $level, $color in $riskline-legends {
+    .riskline .#{$level}-risk {
+        color: $color;
+    }
+}

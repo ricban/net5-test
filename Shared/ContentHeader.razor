@@ -1,0 +1,20 @@
+﻿<Row Class="border-bottom border-dark mb-4 pb-2 px-2 g-0">
+    @if (!Title.IsNullOrEmpty())
+    {
+        <Column Class="@Class">
+            <h2 class="mb-0">@Title</h2>
+        </Column>
+    }
+    @ChildContent
+</Row>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string Class { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+}
