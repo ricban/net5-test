@@ -18,7 +18,7 @@ jobs:
     - name: Rewrite base href
       uses: SteveSandersonMS/ghaction-rewrite-base-href@v1
       with:
-        html_path: ${{ bin/Release/net5.0/browser-wasm/publish/wwwroot }}/index.html
+        html_path: bin/Release/net5.0/browser-wasm/publish/wwwroot/index.html
         base_href: /net5-test/
 
     - name: GitHub Pages
