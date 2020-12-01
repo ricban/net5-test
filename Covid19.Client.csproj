@@ -4,6 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <Nullable>enable</Nullable>
+    <BlazorCacheBootResources>false</BlazorCacheBootResources>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +12,7 @@
     <Content Remove="web\**" />
     <EmbeddedResource Remove="web\**" />
     <None Remove="web\**" />
+    <TypeScriptCompile Remove="node_modules\**" />
     <TypeScriptCompile Remove="web\**" />
   </ItemGroup>
 
