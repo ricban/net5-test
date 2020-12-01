@@ -7,6 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="package.json" />
+    <Content Remove="tsconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="postcss.config.js" />
+    <None Remove="webpack.config.common.js" />
+    <None Remove="webpack.config.dev.js" />
+    <None Remove="webpack.config.prod.js" />
+    <None Remove="yarn.lock" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
